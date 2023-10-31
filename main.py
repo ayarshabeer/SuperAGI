@@ -347,13 +347,13 @@ def user(Authorize: AuthJWT = Depends()):
 async def root(Authorize: AuthJWT = Depends()):
     """API to validate access token"""
 
-    try:
-        Authorize.jwt_required()
-        current_user_email = Authorize.get_jwt_subject()
-        current_user = db.session.query(User).filter(User.email == current_user_email).first()
-        return current_user
-    except:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    #try:
+    Authorize.jwt_required()
+    current_user_email = Authorize.get_jwt_subject()
+    current_user = db.session.query(User).filter(User.email == current_user_email).first()
+    return current_user
+    #except:
+    #    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 @app.post("/validate-llm-api-key")
