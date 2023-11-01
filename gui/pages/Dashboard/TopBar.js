@@ -6,7 +6,7 @@ import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {refreshUrl, openNewTab, getUserClick} from "@/utils/utils";
 import Cookies from 'js-cookie';
-
+import {cookieDomain} from "@/pages/api/apiConfig";
 export default function TopBar({selectedProject, userName, env}) {
   const [dropdown, setDropdown] = useState(false);
   const router = useRouter();
@@ -21,10 +21,12 @@ export default function TopBar({selectedProject, userName, env}) {
       return;
     }
     getUserClick('Logged Out',{})
+    console.log(cookieDomain())
+    console.log("shabeer>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     // localStorage.removeItem('accessToken');
-    Cookies.set('accessToken', '', { expires: new Date(0),domain: '.superagi.com', path: '/'});
-    Cookies.set('Source', 'app.superagi', {domain: '.superagi.com', path: '/'});
-    Cookies.set('mixpanel_initialized', 'false', {domain: '.superagi.com', path: '/'});
+    Cookies.set('accessToken', '', { expires: new Date(0),domain: cookieDomain(), path: '/'});
+    Cookies.set('Source', 'app.superagi', {domain: cookieDomain(), path: '/'});
+    Cookies.set('mixpanel_initialized', 'false', {domain: cookieDomain(), path: '/'});
     refreshUrl();
     router.reload();
   };

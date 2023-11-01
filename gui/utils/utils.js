@@ -1,71 +1,80 @@
-import {formatDistanceToNow, format, addMinutes} from 'date-fns';
-import {utcToZonedTime} from 'date-fns-tz';
-import {baseUrl, analyticsMeasurementId, analyticsApiSecret, mixpanelId} from "@/pages/api/apiConfig";
-import {EventBus} from "@/utils/eventBus";
+import { formatDistanceToNow, format, addMinutes } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
+import {
+  baseUrl,
+  analyticsMeasurementId,
+  analyticsApiSecret,
+  mixpanelId,
+} from "@/pages/api/apiConfig";
+import { EventBus } from "@/utils/eventBus";
 import JSZip from "jszip";
-import moment from 'moment';
-import mixpanel from 'mixpanel-browser'
+import moment from "moment";
+import mixpanel from "mixpanel-browser";
 import Cookies from "js-cookie";
 
 const toolkitData = {
-  'Jira Toolkit': '/images/jira_icon.svg',
-  'Email Toolkit': '/images/gmail_icon.svg',
-  'Google Calendar Toolkit': '/images/google_calender_icon.svg',
-  'GitHub Toolkit': '/images/github_icon.svg',
-  'Google Search Toolkit': '/images/google_search_icon.svg',
-  'Searx Toolkit': '/images/searx_icon.svg',
-  'Slack Toolkit': '/images/slack_icon.svg',
-  'Web Scraper Toolkit': '/images/webscraper_icon.svg',
-  'Web Scrapper Toolkit': '/images/webscraper_icon.svg',
-  'Twitter Toolkit': '/images/twitter_icon.svg',
-  'Google SERP Toolkit': '/images/google_serp_icon.svg',
-  'File Toolkit': '/images/filemanager_icon.svg',
-  'CodingToolkit': '/images/superagi_logo.png',
-  'Thinking Toolkit': '/images/superagi_logo.png',
-  'Image Generation Toolkit': '/images/superagi_logo.png',
-  'DuckDuckGo Search Toolkit': '/images/duckduckgo_icon.png',
-  'Instagram Toolkit': '/images/instagram.png',
-  'Knowledge Search Toolkit': '/images/knowledeg_logo.png',
-  'Notion Toolkit': '/images/notion_logo.png',
-  'ApolloToolkit': '/images/apollo_logo.png',
-  'Google Analytics Toolkit': '/images/google_analytics_logo.png'
+  "Jira Toolkit": "/images/jira_icon.svg",
+  "Email Toolkit": "/images/gmail_icon.svg",
+  "Google Calendar Toolkit": "/images/google_calender_icon.svg",
+  "GitHub Toolkit": "/images/github_icon.svg",
+  "Google Search Toolkit": "/images/google_search_icon.svg",
+  "Searx Toolkit": "/images/searx_icon.svg",
+  "Slack Toolkit": "/images/slack_icon.svg",
+  "Web Scraper Toolkit": "/images/webscraper_icon.svg",
+  "Web Scrapper Toolkit": "/images/webscraper_icon.svg",
+  "Twitter Toolkit": "/images/twitter_icon.svg",
+  "Google SERP Toolkit": "/images/google_serp_icon.svg",
+  "File Toolkit": "/images/filemanager_icon.svg",
+  CodingToolkit: "/images/superagi_logo.png",
+  "Thinking Toolkit": "/images/superagi_logo.png",
+  "Image Generation Toolkit": "/images/superagi_logo.png",
+  "DuckDuckGo Search Toolkit": "/images/duckduckgo_icon.png",
+  "Instagram Toolkit": "/images/instagram.png",
+  "Knowledge Search Toolkit": "/images/knowledeg_logo.png",
+  "Notion Toolkit": "/images/notion_logo.png",
+  ApolloToolkit: "/images/apollo_logo.png",
+  "Google Analytics Toolkit": "/images/google_analytics_logo.png",
 };
 
 export const getUserTimezone = () => {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
+};
 
 export const convertToGMT = (dateTime) => {
   if (!dateTime) {
     return null;
   }
-  return moment.utc(dateTime).format('YYYY-MM-DD HH:mm:ss');
+  return moment.utc(dateTime).format("YYYY-MM-DD HH:mm:ss");
 };
 
 export const formatTimeDifference = (timeDifference) => {
-  const units = ['years', 'months', 'days', 'hours', 'minutes'];
-  const singularUnits = ['year', 'month', 'day', 'hour', 'minute'];
+  const units = ["years", "months", "days", "hours", "minutes"];
+  const singularUnits = ["year", "month", "day", "hour", "minute"];
 
   for (let i = 0; i < units.length; i++) {
     const unit = units[i];
     if (timeDifference[unit] !== 0) {
-      if (unit === 'minutes') {
-        return `${timeDifference[unit]} ${timeDifference[unit] === 1 ? singularUnits[i] : unit} ago`;
+      if (unit === "minutes") {
+        return `${timeDifference[unit]} ${
+          timeDifference[unit] === 1 ? singularUnits[i] : unit
+        } ago`;
       } else {
-        return `${timeDifference[unit]} ${timeDifference[unit] === 1 ? singularUnits[i] : unit} ago`;
+        return `${timeDifference[unit]} ${
+          timeDifference[unit] === 1 ? singularUnits[i] : unit
+        } ago`;
       }
     }
   }
 
-  return 'Just now';
+  return "Just now";
 };
 
 export const formatNumber = (number) => {
   if (number === null || number === undefined || number === 0) {
-    return '0';
+    return "0";
   }
 
-  const suffixes = ['', 'k', 'M', 'B', 'T'];
+  const suffixes = ["", "k", "M", "B", "T"];
   const magnitude = Math.floor(Math.log10(number) / 3);
   const scaledNumber = number / Math.pow(10, magnitude * 3);
   const suffix = suffixes[magnitude];
@@ -79,35 +88,36 @@ export const formatNumber = (number) => {
 
 export const formatTime = (lastExecutionTime) => {
   try {
-    const parsedTime = new Date(lastExecutionTime + 'Z'); // append 'Z' to indicate UTC
+    const parsedTime = new Date(lastExecutionTime + "Z"); // append 'Z' to indicate UTC
     if (isNaN(parsedTime.getTime())) {
-      throw new Error('Invalid time value');
+      throw new Error("Invalid time value");
     }
 
-    const timeZone = 'Asia/Kolkata';
+    const timeZone = "Asia/Kolkata";
     const zonedTime = utcToZonedTime(parsedTime, timeZone);
 
     return formatDistanceToNow(zonedTime, {
       addSuffix: true,
-      includeSeconds: true
-    }).replace(/about\s/, '')
-      .replace(/minutes?/, 'min')
-      .replace(/hours?/, 'hrs')
-      .replace(/days?/, 'day')
-      .replace(/weeks?/, 'week');
+      includeSeconds: true,
+    })
+      .replace(/about\s/, "")
+      .replace(/minutes?/, "min")
+      .replace(/hours?/, "hrs")
+      .replace(/days?/, "day")
+      .replace(/weeks?/, "week");
   } catch (error) {
-    console.error('Error formatting time:', error);
-    return 'Invalid Time';
+    console.error("Error formatting time:", error);
+    return "Invalid Time";
   }
 };
 
 export const formatBytes = (bytes, decimals = 2) => {
   if (bytes === 0) {
-    return '0 Bytes';
+    return "0 Bytes";
   }
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const formattedValue = parseFloat((bytes / Math.pow(k, i)).toFixed(decimals));
 
@@ -118,19 +128,19 @@ export const downloadFile = (fileId, fileName = null) => {
   // const authToken = localStorage.getItem('accessToken');
   const authToken = Cookies.get("accessToken");
   const url = `${baseUrl()}/resources/get/${fileId}`;
-  const env = localStorage.getItem('applicationEnvironment');
+  const env = localStorage.getItem("applicationEnvironment");
 
-  if (env === 'PROD') {
+  if (env === "PROD") {
     const headers = {
       Authorization: `Bearer ${authToken}`,
     };
 
-    return fetch(url, {headers})
+    return fetch(url, { headers })
       .then((response) => response.blob())
       .then((blob) => {
         if (fileName) {
           const fileUrl = window.URL.createObjectURL(blob);
-          const anchorElement = document.createElement('a');
+          const anchorElement = document.createElement("a");
           anchorElement.href = fileUrl;
           anchorElement.download = fileName;
           anchorElement.click();
@@ -140,16 +150,16 @@ export const downloadFile = (fileId, fileName = null) => {
         }
       })
       .catch((error) => {
-        console.error('Error downloading file:', error);
+        console.error("Error downloading file:", error);
       });
   } else {
     if (fileName) {
-      window.open(url, '_blank');
+      window.open(url, "_blank");
     } else {
       return fetch(url)
         .then((response) => response.blob())
         .catch((error) => {
-          console.error('Error downloading file:', error);
+          console.error("Error downloading file:", error);
         });
     }
   }
@@ -170,12 +180,14 @@ export const downloadAllFiles = (files, run_name) => {
       const fileExtensionIndex = file.name.lastIndexOf(".");
       const name = file.name.substring(0, fileExtensionIndex);
       const extension = file.name.substring(fileExtensionIndex + 1);
-      modifiedFileName = `${name} (${fileNamesCount[file.name] - 1}).${extension}`;
+      modifiedFileName = `${name} (${
+        fileNamesCount[file.name] - 1
+      }).${extension}`;
     }
 
     const promise = downloadFile(file.id)
       .then((blob) => {
-        const fileBlob = new Blob([blob], {type: file.type});
+        const fileBlob = new Blob([blob], { type: file.type });
         zip.file(modifiedFileName, fileBlob);
       })
       .catch((error) => {
@@ -185,55 +197,73 @@ export const downloadAllFiles = (files, run_name) => {
     promises.push(promise);
   });
 
-  Promise.all(promises)
-    .then(() => {
-      zip.generateAsync({type: "blob"})
-        .then((content) => {
-          const now = new Date();
-          const timestamp = `${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}-${("0" + now.getDate()).slice(-2)}_${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`.replace(/:/g, '-');
-          const zipFilename = `${run_name}_${timestamp}.zip`;
-          const downloadLink = document.createElement("a");
-          downloadLink.href = URL.createObjectURL(content);
-          downloadLink.download = zipFilename;
-          downloadLink.click();
-        })
-        .catch((error) => {
-          console.error("Error generating zip:", error);
-        });
-    });
+  Promise.all(promises).then(() => {
+    zip
+      .generateAsync({ type: "blob" })
+      .then((content) => {
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}-${(
+          "0" +
+          (now.getMonth() + 1)
+        ).slice(-2)}-${("0" + now.getDate()).slice(
+          -2
+        )}_${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`.replace(
+          /:/g,
+          "-"
+        );
+        const zipFilename = `${run_name}_${timestamp}.zip`;
+        const downloadLink = document.createElement("a");
+        downloadLink.href = URL.createObjectURL(content);
+        downloadLink.download = zipFilename;
+        downloadLink.click();
+      })
+      .catch((error) => {
+        console.error("Error generating zip:", error);
+      });
+  });
 };
 
 export const refreshUrl = () => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return;
   }
 
-  const {origin, pathname} = window.location;
+  const { origin, pathname } = window.location;
   const urlWithoutToken = origin + pathname;
   window.history.replaceState({}, document.title, urlWithoutToken);
 };
 
 export const loadingTextEffect = (loadingText, setLoadingText, timer) => {
   const text = loadingText;
-  let dots = '';
+  let dots = "";
 
   const interval = setInterval(() => {
-    dots = dots.length < 3 ? dots + '.' : '';
+    dots = dots.length < 3 ? dots + "." : "";
     setLoadingText(`${text}${dots}`);
   }, timer);
 
-  return () => clearInterval(interval)
+  return () => clearInterval(interval);
 };
 
 export const openNewTab = (id, name, contentType, hasInternalId = false) => {
-  EventBus.emit('openNewTab', {
-    element: {id: id, name: name, contentType: contentType, internalId: hasInternalId ? createInternalId() : 0}
+  EventBus.emit("openNewTab", {
+    element: {
+      id: id,
+      name: name,
+      contentType: contentType,
+      internalId: hasInternalId ? createInternalId() : 0,
+    },
   });
 };
 
 export const removeTab = (id, name, contentType, internalId) => {
-  EventBus.emit('removeTab', {
-    element: {id: id, name: name, contentType: contentType, internalId: internalId}
+  EventBus.emit("removeTab", {
+    element: {
+      id: id,
+      name: name,
+      contentType: contentType,
+      internalId: internalId,
+    },
   });
 };
 
@@ -259,7 +289,7 @@ const removeAgentInternalId = (internalId) => {
 
   if (internalIdIndex !== -1) {
     idsArray.splice(internalIdIndex, 1);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
     localStorage.removeItem("agent_create_click_" + String(internalId));
     localStorage.removeItem("agent_name_" + String(internalId));
     localStorage.removeItem("agent_description_" + String(internalId));
@@ -301,8 +331,8 @@ const removeAddToolkitInternalId = (internalId) => {
 
   if (internalIdIndex !== -1) {
     idsArray.splice(internalIdIndex, 1);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
-    localStorage.removeItem('tool_github_' + String(internalId));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
+    localStorage.removeItem("tool_github_" + String(internalId));
   }
 };
 
@@ -312,9 +342,9 @@ const removeToolkitsInternalId = (internalId) => {
 
   if (internalIdIndex !== -1) {
     idsArray.splice(internalIdIndex, 1);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
-    localStorage.removeItem('toolkit_tab_' + String(internalId));
-    localStorage.removeItem('api_configs_' + String(internalId));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
+    localStorage.removeItem("toolkit_tab_" + String(internalId));
+    localStorage.removeItem("api_configs_" + String(internalId));
   }
 };
 
@@ -324,12 +354,12 @@ const removeKnowledgeInternalId = (internalId) => {
 
   if (internalIdIndex !== -1) {
     idsArray.splice(internalIdIndex, 1);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
-    localStorage.removeItem('knowledge_name_' + String(internalId));
-    localStorage.removeItem('knowledge_description_' + String(internalId));
-    localStorage.removeItem('knowledge_index_' + String(internalId));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
+    localStorage.removeItem("knowledge_name_" + String(internalId));
+    localStorage.removeItem("knowledge_description_" + String(internalId));
+    localStorage.removeItem("knowledge_index_" + String(internalId));
   }
-}
+};
 
 const removeAddDatabaseInternalId = (internalId) => {
   let idsArray = getInternalIds();
@@ -337,18 +367,18 @@ const removeAddDatabaseInternalId = (internalId) => {
 
   if (internalIdIndex !== -1) {
     idsArray.splice(internalIdIndex, 1);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
-    localStorage.removeItem('add_database_tab_' + String(internalId));
-    localStorage.removeItem('selected_db_' + String(internalId));
-    localStorage.removeItem('db_name_' + String(internalId));
-    localStorage.removeItem('db_collections_' + String(internalId));
-    localStorage.removeItem('pincone_api_' + String(internalId));
-    localStorage.removeItem('pinecone_env_' + String(internalId));
-    localStorage.removeItem('qdrant_api_' + String(internalId));
-    localStorage.removeItem('qdrant_url_' + String(internalId));
-    localStorage.removeItem('qdrant_port_' + String(internalId));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
+    localStorage.removeItem("add_database_tab_" + String(internalId));
+    localStorage.removeItem("selected_db_" + String(internalId));
+    localStorage.removeItem("db_name_" + String(internalId));
+    localStorage.removeItem("db_collections_" + String(internalId));
+    localStorage.removeItem("pincone_api_" + String(internalId));
+    localStorage.removeItem("pinecone_env_" + String(internalId));
+    localStorage.removeItem("qdrant_api_" + String(internalId));
+    localStorage.removeItem("qdrant_url_" + String(internalId));
+    localStorage.removeItem("qdrant_port_" + String(internalId));
   }
-}
+};
 
 const removeDatabaseInternalId = (internalId) => {
   let idsArray = getInternalIds();
@@ -356,42 +386,42 @@ const removeDatabaseInternalId = (internalId) => {
 
   if (internalIdIndex !== -1) {
     idsArray.splice(internalIdIndex, 1);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
-    localStorage.removeItem('db_details_collections_' + String(internalId));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
+    localStorage.removeItem("db_details_collections_" + String(internalId));
   }
-}
+};
 
 export const resetLocalStorage = (contentType, internalId) => {
   switch (contentType) {
-    case 'Create_Agent':
+    case "Create_Agent":
       removeAgentInternalId(internalId);
       break;
-    case 'Add_Toolkit':
+    case "Add_Toolkit":
       removeAddToolkitInternalId(internalId);
       break;
-    case 'Marketplace':
-      localStorage.removeItem('marketplace_tab');
-      localStorage.removeItem('market_item_clicked');
-      localStorage.removeItem('market_detail_type');
-      localStorage.removeItem('market_item');
+    case "Marketplace":
+      localStorage.removeItem("marketplace_tab");
+      localStorage.removeItem("market_item_clicked");
+      localStorage.removeItem("market_detail_type");
+      localStorage.removeItem("market_item");
       break;
-    case 'Toolkits':
+    case "Toolkits":
       removeToolkitsInternalId(internalId);
       break;
-    case 'Knowledge':
+    case "Knowledge":
       removeKnowledgeInternalId(internalId);
       break;
-    case 'Add_Knowledge':
+    case "Add_Knowledge":
       removeKnowledgeInternalId(internalId);
       break;
-    case 'Add_Database':
+    case "Add_Database":
       removeAddDatabaseInternalId(internalId);
       break;
-    case 'Database':
+    case "Database":
       removeDatabaseInternalId(internalId);
       break;
-    case 'Settings':
-      localStorage.removeItem('settings_tab');
+    case "Settings":
+      localStorage.removeItem("settings_tab");
       break;
     default:
       break;
@@ -401,7 +431,7 @@ export const resetLocalStorage = (contentType, internalId) => {
 export const createInternalId = () => {
   let newId = 1;
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     let idsArray = getInternalIds();
     let found = false;
 
@@ -413,49 +443,51 @@ export const createInternalId = () => {
     }
 
     idsArray.push(newId);
-    localStorage.setItem('agi_internal_ids', JSON.stringify(idsArray));
+    localStorage.setItem("agi_internal_ids", JSON.stringify(idsArray));
   }
 
   return newId;
 };
 
 export const returnToolkitIcon = (toolkitName) => {
-  return toolkitData[toolkitName] || '/images/custom_tool.svg';
+  return toolkitData[toolkitName] || "/images/custom_tool.svg";
 };
 
 export const returnResourceIcon = (file) => {
   const fileType = file.type;
 
   switch (true) {
-    case fileType.includes('image'):
-      return '/images/img_file.svg';
-    case fileType === 'application/pdf':
-      return '/images/pdf_file.svg';
-    case fileType === 'application/txt' || fileType === 'text/plain':
-      return '/images/txt_file.svg';
+    case fileType.includes("image"):
+      return "/images/img_file.svg";
+    case fileType === "application/pdf":
+      return "/images/pdf_file.svg";
+    case fileType === "application/txt" || fileType === "text/plain":
+      return "/images/txt_file.svg";
     default:
-      return '/images/default_file.svg';
+      return "/images/default_file.svg";
   }
 };
 
 export const returnDatabaseIcon = (database) => {
   const dbTypeIcons = {
-    'Pinecone': '/images/pinecone.svg',
-    'Qdrant': '/images/qdrant.svg',
-    'Weaviate' : '/images/weaviate.svg'
+    Pinecone: "/images/pinecone.svg",
+    Qdrant: "/images/qdrant.svg",
+    Weaviate: "/images/weaviate.svg",
   };
 
-  return dbTypeIcons[database]
+  return dbTypeIcons[database];
 };
 
 export const convertToTitleCase = (str) => {
   if (!str) {
-    return '';
+    return "";
   }
 
-  const words = str.toLowerCase().split('_');
-  const capitalizedWords = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1));
-  return capitalizedWords.join(' ');
+  const words = str.toLowerCase().split("_");
+  const capitalizedWords = words.map(
+    (word) => word.charAt(0).toUpperCase() + word.slice(1)
+  );
+  return capitalizedWords.join(" ");
 };
 
 export const preventDefault = (e) => {
@@ -464,102 +496,136 @@ export const preventDefault = (e) => {
 
 export const excludedToolkits = () => {
   return ["Thinking Toolkit", "Human Input Toolkit", "Resource Toolkit"];
-}
+};
 
 export const getFormattedDate = (data) => {
   let date = new Date(data);
   const year = date.getFullYear();
   const day = date.getDate();
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const month = months[date.getMonth()];
   return `${day} ${month} ${year}`;
-}
+};
 
 export const modelIcon = (model) => {
   const icons = {
-    'Hugging Face': '/images/huggingface_logo.svg',
-    'Google Palm': '/images/google_palm_logo.svg',
-    'Replicate': '/images/replicate_logo.svg',
-    'OpenAI': '/images/openai_logo.svg',
-  }
+    "Hugging Face": "/images/huggingface_logo.svg",
+    "Google Palm": "/images/google_palm_logo.svg",
+    Replicate: "/images/replicate_logo.svg",
+    OpenAI: "/images/openai_logo.svg",
+  };
 
   return icons[model];
-}
+};
 
 export const modelGetAuth = (modelProvider) => {
   const externalLinks = {
-    'Replicate': 'https://replicate.com/account/api-tokens',
-    'Hugging Face': 'https://huggingface.co/settings/tokens',
-    'OpenAI': 'https://platform.openai.com/account/api-keys',
-    'Google Palm': 'https://developers.generativeai.google/products/palm',
-  }
+    Replicate: "https://replicate.com/account/api-tokens",
+    "Hugging Face": "https://huggingface.co/settings/tokens",
+    OpenAI: "https://platform.openai.com/account/api-keys",
+    "Google Palm": "https://developers.generativeai.google/products/palm",
+  };
 
-  return externalLinks[modelProvider]
-}
+  return externalLinks[modelProvider];
+};
 
 export const formatDateTime = (dateTimeString) => {
   const date = new Date(dateTimeString);
   const adjustedDate = addMinutes(addMinutes(date, 5 * 60), 30);
-  const formattedDate = format(adjustedDate, 'd MMM yyyy HH:mm');
+  const formattedDate = format(adjustedDate, "d MMM yyyy HH:mm");
 
   return formattedDate;
 };
 
 export const convertWaitingPeriod = (waitingPeriod) => {
   let convertedValue = waitingPeriod;
-  let unit = 'seconds';
+  let unit = "seconds";
 
   if (convertedValue >= 60 && convertedValue < 3600) {
     convertedValue = Math.floor(convertedValue / 60);
-    unit = 'minutes';
+    unit = "minutes";
   } else if (convertedValue >= 3600 && convertedValue < 86400) {
     convertedValue = Math.floor(convertedValue / 3600);
-    unit = 'hours';
+    unit = "hours";
   } else if (convertedValue >= 86400 && convertedValue < 604800) {
     convertedValue = Math.floor(convertedValue / 86400);
-    unit = 'days';
+    unit = "days";
   } else if (convertedValue >= 604800) {
     convertedValue = Math.floor(convertedValue / 604800);
-    unit = 'weeks';
+    unit = "weeks";
   }
 
-  return convertedValue + ' ' + unit;
-}
+  return convertedValue + " " + unit;
+};
 
 export const getUTMParametersFromURL = () => {
   const params = new URLSearchParams(window.location.search);
 
   const utmParams = {
-    utm_source: params.get('utm_source') || '',
-    utm_medium: params.get('utm_medium') || '',
-    utm_campaign: params.get('utm_campaign') || '',
+    utm_source: params.get("utm_source") || "",
+    utm_medium: params.get("utm_medium") || "",
+    utm_campaign: params.get("utm_campaign") || "",
   };
 
-  if (!utmParams.utm_source && !utmParams.utm_medium && !utmParams.utm_campaign) {
+  if (
+    !utmParams.utm_source &&
+    !utmParams.utm_medium &&
+    !utmParams.utm_campaign
+  ) {
     return null;
   }
 
   return utmParams;
-}
+};
 
 export const getUserClick = (event, props) => {
-  const env = localStorage.getItem('applicationEnvironment');
-  if(env === 'PROD' && mixpanelId()){
-    mixpanel.track(event, props)
+  const env = localStorage.getItem("applicationEnvironment");
+  if (env === "PROD" && mixpanelId()) {
+    mixpanel.track(event, props);
   }
-}
+};
 
 export const sendGAEvent = async (client, eventName, params) => {
   const measurement_id = analyticsMeasurementId();
   const api_secret = analyticsApiSecret();
-  await fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${measurement_id}&api_secret=${api_secret}`, {
-    method: "POST",
-    body: JSON.stringify({
-      client_id: client,
-      events: [{
-        name: eventName,
-        params: params
-      }]
-    })
-  });
-}
+  try {
+    const response = await fetch(
+      `https://www.google-analytics.com/mp/collect?measurement_id=${measurement_id}&api_secret=${api_secret}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          client_id: client,
+          events: [
+            {
+              name: eventName,
+              params: params,
+            },
+          ],
+        }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Process the response (if needed)
+    const data = await response.json();
+    console.log("Event sent successfully:", data);
+  } catch (error) {
+    // Handle any errors that occurred during the fetch or in processing the response
+    console.error("Error sending event:", error);
+  }
+};

@@ -6,6 +6,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8
 const GOOGLE_ANALYTICS_MEASUREMENT_ID =  process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID;
 const GOOGLE_ANALYTICS_API_SECRET =  process.env.GOOGLE_ANALYTICS_API_SECRET;
 const MIXPANEL_AUTH_ID = process.env.NEXT_PUBLIC_MIXPANEL_AUTH_ID
+const COOKIE_DOMAIN = process.env.NEXT_PUBLIC_COOKIE_DOMAIN || '.ngrok-free.app'
 
 export const baseUrl = () => {
   return API_BASE_URL;
@@ -25,6 +26,10 @@ export const analyticsApiSecret = () => {
 
 export const mixpanelId = () => {
   return MIXPANEL_AUTH_ID;
+};
+
+export const cookieDomain = () => {
+  return COOKIE_DOMAIN;
 };
 
 const api = axios.create({

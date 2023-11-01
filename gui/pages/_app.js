@@ -16,7 +16,7 @@ import {
   addUser,
   installToolkitTemplate, installAgentTemplate, installKnowledgeTemplate, getFirstSignup
 } from "@/pages/api/DashboardService";
-import {githubClientId, mixpanelId} from "@/pages/api/apiConfig";
+import {githubClientId, mixpanelId,cookieDomain} from "@/pages/api/apiConfig";
 import {
   getGithubClientId
 } from "@/pages/api/DashboardService";
@@ -125,7 +125,6 @@ export default function App() {
           const parsedParams = querystring.parse(queryParams);
           let access_token = parsedParams.access_token || null;
           let first_login = parsedParams.first_time_login || ''
-
           const utmParams = getUTMParametersFromURL();
           if (utmParams) {
             sessionStorage.setItem('utm_source', utmParams.utm_source);
@@ -135,10 +134,9 @@ export default function App() {
           const signupSource = sessionStorage.getItem('utm_source');
           const signupMedium = sessionStorage.getItem('utm_medium');
           const singupCampaign = sessionStorage.getItem('campaign');
-
           if (typeof window !== 'undefined' && access_token) {
             // localStorage.setItem('accessToken', access_token);
-            Cookies.set('accessToken', access_token, {domain: '.superagi.com', path: '/'});
+            Cookies.set('accessToken', access_token, {domain: cookieDomain(), path: '/'});
             refreshUrl();
           }
           validateAccessToken()
